@@ -111,17 +111,7 @@ if (is_admin()) {
         add_action("load-$hook", __NAMESPACE__.'\admin_menu_hook');
     }
     add_action( is_multisite() ? 'network_admin_menu' : 'admin_menu', __NAMESPACE__.'\admin_menu' );
-    add_action( 'network_admin_edit_wp-rest-api-security', __NAMESPACE__.'\update_settings' );
 
-    function update_settings() {
-
-        if ( isset( $_POST['option_page'] ) &&
-            'wp_rest_api_security' === $_POST['wp-rest-api-security-option']
-        ) {
-            update_site_option( 'wp_rest_api_security', __NAMESPACE__.'\sanitize_callback' );
-        }
-
-    }
 
     /**
      * Adds a link to the settings to the plugins entry in the plugin list
@@ -145,7 +135,7 @@ if (is_admin()) {
 
     /**
      *
-     * @since 1.0.0f
+     * @since 1.0.0
      */
     function admin_menu_hook()
     {
@@ -290,12 +280,13 @@ if (is_admin()) {
      */
     function display()
     {
-        $tree = load_tree(get_site_option('wp-rest-api-security', []));
-        $options_url = is_multisite() ? 'edit.php?action=wp-rest-api-security' : 'options.php';
-//    } else {
-//    $tree = load_tree(get_option('wp-rest-api-security', []));
-//    $options_url = 'options.php';
-//  }
+        if (is_multisite()) {
+            $tree = load_tree(get_site_option('wp-rest-api-security', []));
+            $options_url = 'edit.php?action=wp-rest-api-security';
+        } else {
+            $tree = load_tree(get_option('wp-rest-api-security', []));
+            $options_url = 'options.php';
+        }
 ?>
 <div class="wrap wp-rest-api-security">
   <div id="icon-options-general" class="icon32"></div>
@@ -338,7 +329,12 @@ if (is_admin()) {
 <?php
     }
 
-
+    /**
+     * Saves the site_option manually as there is no 'options.php' equivalent for the settings form
+     * we have to call 'edit.php?action=ACTION_NAME' instead and hook into network_admin_edit_ACTION_NAME
+     * as we do here
+     * @since 1.2.0
+     */
     function update_network_setting() {
         // todo sanitization
         update_site_option( 'wp-rest-api-security', $_POST[ 'wp-rest-api-security' ] );
