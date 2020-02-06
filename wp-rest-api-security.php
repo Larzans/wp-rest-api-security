@@ -96,20 +96,56 @@ if (is_admin()) {
      */
     function admin_menu()
     {
-        $hook = add_options_page(
+        $parent     = is_multisite() ? 'settings.php' : 'options-general.php';
+        $capability = is_multisite() ? 'manage_network' : 'manage_options';
+
+        $hook = add_submenu_page(
+            $parent,
             'REST API Security',
             'REST API Security',
-            'manage_options',
+            $capability,
             'wp-rest-api-security',
             __NAMESPACE__.'\display'
         );
+
         add_action("load-$hook", __NAMESPACE__.'\admin_menu_hook');
     }
-    add_action('admin_menu', __NAMESPACE__.'\admin_menu');
+    add_action( is_multisite() ? 'network_admin_menu' : 'admin_menu', __NAMESPACE__.'\admin_menu' );
+    add_action( 'network_admin_edit_wp-rest-api-security', __NAMESPACE__.'\update_settings' );
+
+    function update_settings() {
+
+        if ( isset( $_POST['option_page'] ) &&
+            'wp_rest_api_security' === $_POST['wp-rest-api-security-option']
+        ) {
+            update_site_option( 'wp_rest_api_security', __NAMESPACE__.'\sanitize_callback' );
+        }
+
+    }
+
+    /**
+     * Adds a link to the settings to the plugins entry in the plugin list
+     * @param $links
+     * @return array
+     * @since 1.2.0
+     */
+    function plugin_action_links( $links )
+    {
+        $settings_page = is_multisite() ? 'settings.php' : 'options-general.php';
+        $link = ['<a href="' . esc_url(network_admin_url($settings_page)) . '?page=wp-rest-api-security">' . esc_html__('Settings', 'github-updater') . '</a>'];
+
+        return array_merge( $links, $link );
+    }
+    add_filter(
+        is_multisite()
+            ? 'network_admin_plugin_action_links_' . plugin_basename(__FILE__)
+            : 'plugin_action_links_' . plugin_basename(__FILE__),
+      __NAMESPACE__.'\plugin_action_links'
+    );
 
     /**
      *
-     * @since 1.0.0
+     * @since 1.0.0f
      */
     function admin_menu_hook()
     {
@@ -254,7 +290,12 @@ if (is_admin()) {
      */
     function display()
     {
-        $tree = load_tree(get_option('wp-rest-api-security', []));
+        $tree = load_tree(get_site_option('wp-rest-api-security', []));
+        $options_url = is_multisite() ? 'edit.php?action=wp-rest-api-security' : 'options.php';
+//    } else {
+//    $tree = load_tree(get_option('wp-rest-api-security', []));
+//    $options_url = 'options.php';
+//  }
 ?>
 <div class="wrap wp-rest-api-security">
   <div id="icon-options-general" class="icon32"></div>
@@ -262,7 +303,7 @@ if (is_admin()) {
   <h2 class="nav-tab-wrapper">
     <a class="nav-tab nav-tab-active" href="#">Endpoints</a>
   </h2>
-  <form action="options.php" method="post" id="poststuff">
+  <form action="<?= $options_url ?>" method="post" id="poststuff">
     <div id="post-body" class="metabox-holder columns-2">
       <div id="post-body-content">
         <div class="meta-box-sortables ui-sortable">
@@ -296,7 +337,22 @@ if (is_admin()) {
 </div>
 <?php
     }
+
+
+    function update_network_setting() {
+        // todo sanitization
+        update_site_option( 'wp-rest-api-security', $_POST[ 'wp-rest-api-security' ] );
+        wp_redirect( add_query_arg( array( 'page' => 'wp-rest-api-security', 'updated' => 'true' ),
+          network_admin_url( 'settings.php' ) ) );
+        exit;
+    }
+    add_action('network_admin_edit_wp-rest-api-security', __NAMESPACE__ .'\update_network_setting');
+
 } else {
+
+// NOT ADMIN
+// -------------------------------------------
+
     /**
      *
      * @since 1.0.0
@@ -319,7 +375,11 @@ if (is_admin()) {
         foreach ($server->get_routes() as $route => $handlers) {
             if (preg_match('@^'.$route.'$@i', $path)) {
                 $pieces = split_route($route);
-                $tree = get_option('wp-rest-api-security', []);
+                if (is_multisite()) {
+                  $tree = get_site_option('wp-rest-api-security', []);
+                } else {
+                  $tree = get_option('wp-rest-api-security', []);
+                }
 
                 $tree_ptr = &$tree;
                 for ($i = 0; $i < count($pieces)-1; $i++) {
