@@ -3,7 +3,7 @@
  * Plugin Name: WP REST API Security
  * Description: A UI to choose which REST API endpoints to enable.
  * Text Domain: wp-rest-api-security
- * Version: 1.1.2
+ * Version: 1.2.0
  * Author: Charles Lecklider
  * Author URI: https://charles.lecklider.org/
  * License: GPLv2
@@ -333,6 +333,7 @@ if (is_admin()) {
      * Saves the site_option manually as there is no 'options.php' equivalent for the settings form
      * we have to call 'edit.php?action=ACTION_NAME' instead and hook into network_admin_edit_ACTION_NAME
      * as we do here
+     * as per https://benohead.com/blog/2014/06/02/wordpress-network-wide-plugin-settings
      * @since 1.2.0
      */
     function update_network_setting() {
