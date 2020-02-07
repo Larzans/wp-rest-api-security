@@ -345,6 +345,8 @@ if (is_admin()) {
     }
     add_action('network_admin_edit_wp-rest-api-security', __NAMESPACE__ .'\update_network_setting');
 
+    // multisite info here: https://wisdmlabs.com/blog/build-multisite-compatible-wordpress-plugin/
+
 } else {
 
 // NOT ADMIN

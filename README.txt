@@ -16,6 +16,8 @@ Provides a UI to control which REST API endpoints are enabled and which require 
 
 The REST API is essential for any modern web framework, but with it comes a huge attack surface. *WP REST API Security* reduces the attack surface by disabling all the REST API endpoints by default, allowing you to enable only those actually needed. Those that are enabled require authentication by default, allowing you to choose which to make public.
 
+When used in a multisite install the site settings are used for all the blogs, the blogs will not be able to define their own settings.
+
 > **N.B.** If you are using the new Block Editor you must keep nearly all the endpoints enabled for it to work, but none need be public.
 
 == Installation ==
@@ -27,6 +29,9 @@ The REST API is essential for any modern web framework, but with it comes a huge
 > **N.B.** Activating *WP REST API Security* will disable all REST endpoints - you **must** enable the ones you need.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added multisite support (Lars Ermert)
 
 = 1.1.2 =
 * Fix array error.
